@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YseeGeo — AI 可见性诊断台 · AI Visibility Diagnosis</title>
+<meta name="description" content="YseeGeo probes DeepSeek, Qwen, Kimi, Doubao and Zhipu in parallel to show how AI engines talk about your brand — with verbatim evidence, not black-box scores.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  :root{
+    --b1:#00A9FF; --b2:#1E5CFF; --b3:#3533FF;
+    --ink:#0B1220; --muted:#5A6B85; --bg:#F6F8FC;
+    --card:#FFFFFF; --line:#E3E9F4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .container{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:inherit}
+
+  /* ---------- 顶栏 ---------- */
+  header{
+    position:sticky;top:0;z-index:10;
+    background:rgba(255,255,255,.88);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:.2px;text-decoration:none}
+  .brand svg{width:34px;height:34px;flex:none}
+  .langswitch{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#fff}
+  .langswitch button{
+    border:0;background:transparent;padding:6px 16px;font-size:13px;cursor:pointer;
+    color:var(--muted);font-family:inherit;line-height:1.4;
+  }
+  .langswitch button.active{background:linear-gradient(90deg,var(--b2),var(--b3));color:#fff;font-weight:600}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:
+      radial-gradient(640px 320px at 10% -10%, rgba(0,169,255,.16), transparent 60%),
+      radial-gradient(760px 420px at 92% 0%, rgba(53,51,255,.13), transparent 60%),
+      #FFFFFF;
+    border-bottom:1px solid var(--line);
+    padding:88px 0 76px;text-align:center;
+  }
+  .badge{
+    display:inline-block;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:600;
+    color:var(--b2);background:rgba(30,92,255,.08);border:1px solid rgba(30,92,255,.22);
+    margin-bottom:26px;letter-spacing:.3px;
+  }
+  h1{font-size:clamp(30px,4.6vw,50px);line-height:1.25;font-weight:800;letter-spacing:-.5px;margin-bottom:22px}
+  .grad{background:linear-gradient(90deg,var(--b1),var(--b3));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:760px;margin:0 auto 36px;font-size:clamp(15px,1.8vw,18px);color:var(--muted)}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:44px}
+  .btn{
+    display:inline-block;padding:13px 30px;border-radius:12px;font-size:15px;font-weight:600;
+    text-decoration:none;transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary{background:linear-gradient(90deg,var(--b2),var(--b3));color:#fff;box-shadow:0 6px 20px rgba(30,92,255,.28)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(30,92,255,.34)}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--b2);color:var(--b2)}
+  .chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .chip{
+    padding:7px 16px;border-radius:999px;background:#fff;border:1px solid var(--line);
+    font-size:13px;color:var(--muted);font-weight:500;
+  }
+
+  /* ---------- 通用区块 ---------- */
+  section{padding:72px 0}
+  .sec-tag{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--b2);text-transform:uppercase;margin-bottom:12px}
+  h2{font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.3px;margin-bottom:18px}
+  .lead{max-width:760px;color:var(--muted);font-size:16px}
+
+  /* ---------- 卡片 ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:40px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 28px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(11,18,32,.08)}
+  .card .icon{
+    width:44px;height:44px;border-radius:12px;margin-bottom:18px;
+    background:linear-gradient(135deg,rgba(0,169,255,.14),rgba(53,51,255,.14));
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card .icon svg{width:24px;height:24px}
+  .card h3{font-size:18px;font-weight:700;margin-bottom:8px}
+  .card p{font-size:14.5px;color:var(--muted)}
+
+  /* ---------- 步骤 ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px;counter-reset:step}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 26px;position:relative}
+  .step .num{
+    width:38px;height:38px;border-radius:50%;color:#fff;font-weight:800;font-size:16px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+    background:linear-gradient(135deg,var(--b1),var(--b3));
+  }
+  .step h3{font-size:17px;font-weight:700;margin-bottom:8px}
+  .step p{font-size:14px;color:var(--muted)}
+
+  /* ---------- 方法学 ---------- */
+  .method{
+    background:linear-gradient(135deg,#0B1220,#131E3A);color:#E8EEF9;border-radius:20px;
+    padding:52px 48px;
+  }
+  .method .sec-tag{color:#7CC4FF}
+  .method h2{color:#fff}
+  .method p{color:#A9B8D4;max-width:820px;font-size:16px}
+  .method p + p{margin-top:14px}
+  .attribution{
+    margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.14);
+    font-size:13.5px;color:#8FA1C2;
+  }
+
+  /* ---------- 页脚 ---------- */
+  footer{padding:34px 0;border-top:1px solid var(--line);background:#fff}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+    .method{padding:36px 26px}
+    section{padding:56px 0}
+    .hero{padding:64px 0 60px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 64 64" role="img" aria-label="YseeGeo">
+        <defs>
+          <linearGradient id="egNav" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
+            <stop offset="0" stop-color="#00A9FF"/><stop offset="0.62" stop-color="#1E5CFF"/><stop offset="1" stop-color="#3533FF"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="19.6" fill="url(#egNav)"/>
+        <path d="M 36.85 4.52 A 27.9 27.9 0 0 1 48 54.85" fill="none" stroke="url(#egNav)" stroke-width="5.2" stroke-linecap="round"/>
+        <path d="M 27.16 59.48 A 27.9 27.9 0 0 1 5.78 41.54" fill="none" stroke="url(#egNav)" stroke-width="5.2" stroke-linecap="round" opacity="0.45"/>
+        <circle cx="32" cy="32" r="9.2" fill="#0B1220"/>
+        <circle cx="28" cy="27.9" r="3.1" fill="#FFFFFF"/>
+      </svg>
+      <span>YseeGeo</span>
+    </a>
+    <div class="langswitch">
+      <button id="btnZh" class="active" onclick="setLang('zh')">中文</button>
+      <button id="btnEn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="container">
+    <div class="badge" data-zh="GEO · 生成式引擎优化诊断" data-en="GEO · Generative Engine Optimization">GEO · 生成式引擎优化诊断</div>
+    <h1><span data-zh="看见 AI 如何" data-en="See how AI engines">看见 AI 如何</span><br><span class="grad" data-zh="谈论你的品牌" data-en="talk about your brand">谈论你的品牌</span></h1>
+    <p class="sub" data-zh="YseeGeo 用受控探针并行提问五款中国主流大模型，把你的品牌在生成式引擎里的真实表现——连同逐字证据——摆在你面前。没有黑箱分数，只有可复核的答案。" data-en="YseeGeo probes five leading Chinese LLMs in parallel with a controlled prompt panel, then puts your brand's real performance inside generative engines — with verbatim evidence — in front of you. No black-box scores, only verifiable answers.">YseeGeo 用受控探针并行提问五款中国主流大模型，把你的品牌在生成式引擎里的真实表现——连同逐字证据——摆在你面前。没有黑箱分数，只有可复核的答案。</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://geo-vis-diagnosis.app.workbuddy.host/" target="_blank" rel="noopener" data-zh="访问诊断台" data-en="Visit the platform">访问诊断台</a>
+      <a class="btn btn-ghost" href="#methodology" data-zh="了解方法学" data-en="Our methodology">了解方法学</a>
+    </div>
+    <div class="chips">
+      <span class="chip">DeepSeek</span><span class="chip" data-zh="通义千问" data-en="Qwen">通义千问</span><span class="chip">Kimi</span><span class="chip" data-zh="豆包" data-en="Doubao">豆包</span><span class="chip" data-zh="智谱 GLM" data-en="Zhipu GLM">智谱 GLM</span>
+    </div>
+  </div>
+</div>
+
+<section id="problem">
+  <div class="container">
+    <div class="sec-tag" data-zh="问题" data-en="The problem">问题</div>
+    <h2 data-zh="你的客户，已经在问 AI" data-en="Your customers are already asking AI">你的客户，已经在问 AI</h2>
+    <p class="lead" data-zh="「哪个牌子好？」「预算三千买什么？」「A 和 B 怎么选？」——当客户把决策交给生成式引擎，答案里没有你，你就不会出现在候选里。GEO（生成式引擎优化）要解决的，就是这件事。" data-en="&quot;Which brand is good?&quot; &quot;What should I buy under 3,000?&quot; &quot;A or B?&quot; — when customers hand their decisions to generative engines, if you are not in the answer, you are not in the shortlist. That is exactly what GEO (Generative Engine Optimization) addresses.">「哪个牌子好？」「预算三千买什么？」「A 和 B 怎么选？」——当客户把决策交给生成式引擎，答案里没有你，你就不会出现在候选里。GEO（生成式引擎优化）要解决的，就是这件事。</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E5CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+        </div>
+        <h3 data-zh="多引擎并行覆盖" data-en="Multi-engine coverage">多引擎并行覆盖</h3>
+        <p data-zh="一次诊断，DeepSeek、通义千问、Kimi、豆包、智谱 GLM 同时作答——是覆盖，不是抽样。" data-en="One diagnosis, five engines answering at once — coverage, not sampling.">一次诊断，DeepSeek、通义千问、Kimi、豆包、智谱 GLM 同时作答——是覆盖，不是抽样。</p>
+      </div>
+      <div class="card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E5CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3l-9 9"/><path d="M15 3h6v6"/></svg>
+        </div>
+        <h3 data-zh="D/K 双探针" data-en="Dual probes">D/K 双探针</h3>
+        <p data-zh="直接提问测「被不被推荐」，知识提问测「被不被知道」——两种失败分开修，不混为一谈。" data-en="Direct probes test whether you are recommended; knowledge probes test whether you are known. Two different failures, fixed differently.">直接提问测「被不被推荐」，知识提问测「被不被知道」——两种失败分开修，不混为一谈。</p>
+      </div>
+      <div class="card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E5CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <h3 data-zh="证据链" data-en="Evidence chain">证据链</h3>
+        <p data-zh="每个结论都能回到原话：哪台模型、问的哪句、答案在哪一段——复核者亲眼看见，而不是只信一个分数。" data-en="Every conclusion traces back to the source: which engine, which prompt, which paragraph — reviewers see it with their own eyes.">每个结论都能回到原话：哪台模型、问的哪句、答案在哪一段——复核者亲眼看见，而不是只信一个分数。</p>
+      </div>
+      <div class="card">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E5CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h3 data-zh="诚实指标" data-en="Honest metrics">诚实指标</h3>
+        <p data-zh="引擎不可用就标「不可用」，指标记 null 不记 0——我们宁可少一个数字，也不编一个数字。" data-en="When an engine is down, we mark it down; metrics record null, never a faked zero. We would rather report one fewer number than invent one.">引擎不可用就标「不可用」，指标记 null 不记 0——我们宁可少一个数字，也不编一个数字。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-tag" data-zh="怎么工作" data-en="How it works">怎么工作</div>
+    <h2 data-zh="三步，从问题到证据" data-en="Three steps, from question to evidence">三步，从问题到证据</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3 data-zh="输入品牌与问题面板" data-en="Bring your brand and prompt panel">输入品牌与问题面板</h3>
+        <p data-zh="决策型问题参数化生成，预算档位与使用场景可配置——同一问题跨周期可比。" data-en="Parameterized decision-type prompts; budget tiers and scenarios are configurable — comparable across runs.">决策型问题参数化生成，预算档位与使用场景可配置——同一问题跨周期可比。</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3 data-zh="受控并行问答" data-en="Controlled parallel probing">受控并行问答</h3>
+        <p data-zh="同一问题面板穿过多款引擎，多次运行测稳定性——先看稳不稳，再看高不高。" data-en="One panel across multiple engines, repeated runs to measure stability — stability first, level second.">同一问题面板穿过多款引擎，多次运行测稳定性——先看稳不稳，再看高不高。</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3 data-zh="证据报告" data-en="Evidence report">证据报告</h3>
+        <p data-zh="生成可复核、可交付给你自己客户的诊断报告——每一页都经得起追问。" data-en="A verifiable report you can hand to your own clients — every page stands up to scrutiny.">生成可复核、可交付给你自己客户的诊断报告——每一页都经得起追问。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="methodology">
+  <div class="container">
+    <div class="method">
+      <div class="sec-tag" data-zh="方法学" data-en="Methodology">方法学</div>
+      <h2 data-zh="可复核，是唯一的评分标准" data-en="Verifiability is the only score that matters">可复核，是唯一的评分标准</h2>
+      <p data-zh="YseeGeo 的方法学遵循 GEO（生成式引擎优化）体系：以受控 prompt 面板测量品牌在生成式引擎中的可见性，以证据链保证每个结论可回到原话。我们刻意不提供「权威评分」——同一个 prompt 连跑两次都可能有差异，把噪声包装成分数是对客户的不负责。" data-en="YseeGeo's methodology follows the GEO (Generative Engine Optimization) discipline: a controlled prompt panel measures brand visibility inside generative engines, and an evidence chain lets every conclusion return to verbatim source text. We deliberately do not offer an &quot;authoritative score&quot; — the same prompt can yield different answers across runs, and dressing noise up as a score would be irresponsible to our clients.">YseeGeo 的方法学遵循 GEO（生成式引擎优化）体系：以受控 prompt 面板测量品牌在生成式引擎中的可见性，以证据链保证每个结论可回到原话。我们刻意不提供「权威评分」——同一个 prompt 连跑两次都可能有差异，把噪声包装成分数是对客户的不负责。</p>
+      <p data-zh="路线图上，我们正把同一套流水线推向 Agent 决策链诊断（AAO）：当客户把选择交给会执行动作的 Agent，「被选中」比「被提到」更接近交易。" data-en="On our roadmap, the same pipeline is being extended to agent decision-chain diagnostics (AAO): when customers hand their choices to agents that act, being selected matters more than being mentioned.">路线图上，我们正把同一套流水线推向 Agent 决策链诊断（AAO）：当客户把选择交给会执行动作的 Agent，「被选中」比「被提到」更接近交易。</p>
+      <div class="attribution" data-zh="方法论借鉴 niubigeo（Apache-2.0, Copyright 2026 NiubiStar），本项目为独立重写。" data-en="Methodology references niubigeo (Apache-2.0, Copyright 2026 NiubiStar). This is an independent rewrite.">方法论借鉴 niubigeo（Apache-2.0, Copyright 2026 NiubiStar），本项目为独立重写。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container foot">
+    <span>© 2026 YseeGeo · <span data-zh="AI 可见性诊断台" data-en="AI Visibility Diagnosis">AI 可见性诊断台</span></span>
+    <span data-zh="方法论借鉴 niubigeo（Apache-2.0, Copyright 2026 NiubiStar）· 独立重写" data-en="Methodology references niubigeo (Apache-2.0, Copyright 2026 NiubiStar) · Independent rewrite">方法论借鉴 niubigeo（Apache-2.0, Copyright 2026 NiubiStar）· 独立重写</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var stored = null;
+  try { stored = localStorage.getItem('yg_lang'); } catch(e) {}
+  var lang = stored || (navigator.language && navigator.language.indexOf('zh') === 0 ? 'zh' : 'en');
+  function apply(l){
+    document.documentElement.lang = (l === 'zh') ? 'zh-CN' : 'en';
+    var nodes = document.querySelectorAll('[data-zh]');
+    for (var i = 0; i < nodes.length; i++){
+      nodes[i].textContent = nodes[i].getAttribute(l === 'zh' ? 'data-zh' : 'data-en');
+    }
+    document.getElementById('btnZh').className = (l === 'zh') ? 'active' : '';
+    document.getElementById('btnEn').className = (l === 'en') ? 'active' : '';
+    try { localStorage.setItem('yg_lang', l); } catch(e) {}
+  }
+  window.setLang = apply;
+  apply(lang);
+})();
+</script>
+</body>
+</html>

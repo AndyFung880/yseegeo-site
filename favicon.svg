@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="YseeGeo">
+  <defs>
+    <!-- v65：渐变改 userSpaceOnUse —— 主圆与两条轨道弧共用同一坐标系，颜色走向才真正一致
+         （objectBoundingBox 下每条弧会按各自包围盒重新映射，三段蓝会各走各的） -->
+    <linearGradient id="egFav" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
+      <stop offset="0" stop-color="#00A9FF" />
+      <stop offset="0.62" stop-color="#1E5CFF" />
+      <stop offset="1" stop-color="#3533FF" />
+    </linearGradient>
+  </defs>
+  <!-- v65 Mark「扫描瞳」：瞳是画面唯一重心，轨道弧环绕它 = 一次 AI 诊断扫描正在进行。
+       去掉 v63 的蓝色圆角方框与眼睛轮廓——方框会把「瞳」压成图标里的一个小零件，
+       而自由形态在 16px 下反而更立得住（外径 30.25/64，四周留 1.75 安全边）。
+       四元素契约：瞳心(深色) ×1 + 高光(白) ×1 + 轨道弧 ×2，无 rect / 无 ellipse / 无 Q 眼形。 -->
+  <circle cx="32" cy="32" r="19.6" fill="url(#egFav)" />
+  <path d="M 36.85 4.52 A 27.9 27.9 0 0 1 48 54.85" fill="none" stroke="url(#egFav)"
+        stroke-width="5.2" stroke-linecap="round" />
+  <path d="M 27.16 59.48 A 27.9 27.9 0 0 1 5.78 41.54" fill="none" stroke="url(#egFav)"
+        stroke-width="5.2" stroke-linecap="round" opacity="0.45" />
+  <circle cx="32" cy="32" r="9.2" fill="#0B1220" />
+  <circle cx="28" cy="27.9" r="3.1" fill="#FFFFFF" />
+</svg>
